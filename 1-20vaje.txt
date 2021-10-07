@@ -1,0 +1,116 @@
+--1. izpiši vse podatke o članih (rezultat ima 760 vrstic)
+select * from Član
+--2. izpiši vse podatke o članih, urejene po priimku člana
+select * from Član order by Ime
+--3. izpiši vse podatke o članih, urejene po številki vasi, nato pa po imenih
+select * from Član order by Vas, Ime
+--4. izpiši ime člana, naslov in ime vasi, urejene po imenu vasi, nato po imenih člana
+select Član.Ime, Član.Naslov, Vasi.Ime_vasi  from Član
+INNER JOIN Vasi on Član.Vas = Vasi.Sifra_vas 
+order by Ime_vasi, Ime
+--5. izpiši imena članov, ki vsebujejo besedo 'FRANC' (17 takih je)
+select Ime from Član where Ime like '%FRANC%'
+--6. izpiši skupno količino pripeljanega grozdja po posameznem članu iz tabele
+--prevzem. V izpisu naj bo šifra člana in skupna količina grozdja, izpis uredi po šifri člana
+select Sifra_clan, sum(Kolicina) from Prevzem
+group by Sifra_clan 
+order by Sifra_clan
+--7. izpiši skupno količino grozdja po letnikih iz tabele Prevzem
+select Letnik, sum(Kolicina) from Prevzem
+group by Letnik
+--8. izpiši skupno količino grozdja za posamezno sorto za Letnik 2000 urejeno po sortah
+select sum(Kolicina) as Skupaj, Sorta from Prevzem
+where Letnik=2000
+group by Sorta
+order by Sorta
+--9. izpiši skupno količino grozdja za posamezno sorto za Letnik 2000 urejeno po sortah, uporabi imena sort
+select sum(Kolicina) as Skupaj, ImeS from Prevzem
+join Sorta on sorta.Sifra_sorta = Prevzem.Sorta
+where Letnik=2000
+group by ImeS
+order by ImeS
+--10. izpiši skupno količino grozdja za posamezno sorto za Letnik 2000 urejeno po odkupni količini padajoče, uporabi imena sort
+select sum(Kolicina) as Skupaj, ImeS from Prevzem
+join Sorta on sorta.Sifra_sorta = Prevzem.Sorta
+where Letnik=2000
+group by ImeS
+order by Skupaj desc
+--11. kateri član je pripeljal največ grozdja naenkrat? Izpiši šifro člana (9270120)
+select max(kolicina) from Prevzem--
+select sifra_clan from Prevzem
+where Kolicina=(select max(kolicina) from Prevzem
+--12. izpiši ime člana, ki je pripeljal največ grozdja naenkrat (Koncut Damijan)
+select ime from Prevzem
+join Član on prevzem.Sifra_clan=Član.Sifra_clan
+where Kolicina=(select max(kolicina) from Prevzem)
+
+select top 1 sifra_clan from Prevzem
+order by Prevzem.Kolicina desc
+--13. izpiši šifro člana, ki je v letu 2003 pripeljal največ grozdja (9330030)
+select top 1 sifra_clan, sum(kolicina) as skupaj from Prevzem
+where Letnik=2003
+group by Sifra_clan
+order by skupaj desc
+--14. Koliko je vseh članov (760)
+select count(*) from Član
+--15. Koliko članov je pripeljalo grozdje v letu 2001 (720)
+select count(distinct sifra_clan) from Prevzem
+where Letnik=2001
+--16. Koliko članov ni pripeljalo grozdja v letu 2001 (40)
+select count(*) from Član
+where Sifra_clan not in
+(select distinct sifra_clan from Prevzem
+where Letnik=2001)
+
+--17. izpiši imena in naslove članov, ki niso pripeljali grozdja v letu 2001, uredi po imenu
+--18. izpiši imena in naslove članov, ki niso pripeljali grozdja v letu 2000 ali 2001 ali 2002 ali 2003, uredi po imenu
+--19. izpiši povprečno sladkorno stopnjo po sortah. V izpisu naj bo letnik,ime sorte skupna količina in povprečna stopnja sladkorje
+--povprečno sladkorno stopnjo izračunamo kot povrečje količina*sladkor nato delimo s
+--količino, izpis uredi po letnikih in
+select Letnik, ImeS, sum(kolicina), sum(kolicina*sladkor)/sum(kolicina) as slst
+from Prevzem
+join sorta on sorta.Sifra_sorta=Prevzem.Sorta
+group by Letnik, ImeS
+order by letnik, slst desc
+-- po sladkornih stopnjah, padajoče
+--20. izpiši povprečno sladkorno stopnjo po sortah. V izpisu naj bo letnik,ime sorte, skupna količina in povprečna stopnja sladkorje
+select Letnik, ImeS, sum(kolicina), sum(kolicina), avg(Sladkor) as slst
+from Prevzem
+join sorta on sorta.Sifra_sorta=Prevzem.Sorta
+group by Letnik, ImeS
+order by letnik, slst desc
+-- povprečno sladkorno stopnjo izračunamo kot povprečje sladkornih stopenj nato delimo
+--s količino, izpis uredi po letnikih in
+-- po sladkornih stopnjah, padajoče
+-- primerjaj rezultate 24. in 25. naloge. Kateri so po tvojem mnenju pravilni? Zakaj?
+------------------------------------------------------------------------------
+--1. izdelaj novo tabelo, ki ima enako strukturo kot Sorta z imenom Grozdje
+USE [Vaja klet]
+GO
+
+/****** Object:  Table [dbo].[Sorta]    Script Date: 7. 10. 2021 11:26:24 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Grozdje](
+	[Sifra_sorta] [int] NOT NULL primary key,
+	[ImeS] [nvarchar](255) NULL,
+	[Sifrav] [int] NULL,
+	[SifraUE] [nvarchar](255) NULL,
+	[Barva] [nvarchar](255) NULL)
+
+
+
+--2. vstavi v tabelo podatke o sortah iz tabele sorta
+insert into Grozdje select * from Sorta
+--3. vstavi v tabelo grozdje sorto 501 z imenom Laški rizling
+insert into Grozdje (Sifra_sorta, ImeS) values (501, 'Laški rizling')
+--4. popravi barvo vseh sort, kjer je vrednost barve null v belo
+update Grozdje set barva='belo' where Barva is null
+--5. izbriši podatke iz tabele Grozdje
+delete from Grozdje
+--6. izbriši tabelo Grozdje
+drop table	Grozdje
